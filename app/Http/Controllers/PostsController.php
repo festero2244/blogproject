@@ -13,7 +13,7 @@ class PostsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {   
+    {
         return view('blog.index')
         ->with('posts', Post::orderBy('updated_at', 'DESC')->get());
     }
@@ -48,14 +48,14 @@ class PostsController extends Controller
             $file-> move(public_path('public/Image'), $filename);
             $data['image']= $filename;
         };
-        
+
         Post::create([
             'title' => $request->input('title'),
 
             'description' => $request->input('description'),
 
             'slug' => SlugService::createSlug(Post::class, 'slug', $request->title),
-            
+
             'image_path' => $filename,
 
             'user_id' => auth()->user()->id
@@ -84,8 +84,13 @@ class PostsController extends Controller
      */
     public function edit($slug)
     {
+        $post = auth()->user()
+            ->posts()
+            ->where(['slug'=>$slug])
+            ->firstOrFail();
+
         return view('blog.edit')
-        ->with('post', Post::where('slug', $slug)->first());
+        ->with('post', $post);
     }
 
     /**
@@ -97,22 +102,23 @@ class PostsController extends Controller
      */
     public function update(Request $request, $slug)
     {
-        
+        $post = Post::where('slug', $slug)->firstOrFail();
+
+        abort_if($post->user_id !== auth()->id(),403);
+
         $request->validate([
             'title' => 'required',
             'description' => 'required',
         ]);
 
-        Post::where('slug', $slug)->
-
-        update([
+        $post->update([
             'title' => $request->input('title'),
 
             'description' => $request->input('description'),
 
             'slug' => SlugService::createSlug(Post::class, 'slug', $request->title),
 
-            'user_id' => auth()->user()->id
+//            'user_id' => auth()->user()->id // It's not recommended to change the post author
         ]);
 
         return redirect('/blog')->with('message', 'your post has been updated');
@@ -126,8 +132,10 @@ class PostsController extends Controller
      */
     public function destroy($slug)
     {
-        $post = Post::where('slug', $slug);
-        $post->delete();
+        auth()->user()
+            ->posts()
+            ->where('slug', $slug)
+            ->delete();
 
         return redirect('/blog')->with('message', 'your post has been deleted');
     }
