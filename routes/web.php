@@ -15,9 +15,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/index',[PagesController::class,'index']);
-
-Route::resource('/blog',PostsController::class);
+Route::get('/',[PagesController::class,'index']);
+Route::get('/blog',[PostsController::class,'index'])->name('blog.index');
 
 Route::middleware([
     'auth:sanctum',
@@ -27,4 +26,7 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+    Route::resource('/blog',PostsController::class)->except(['index','show']);
 });
+
+Route::get('/blog/{slug}',[PostsController::class,'show'])->name('blog.show');
