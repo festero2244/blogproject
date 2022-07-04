@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/index',[PagesController::class,'index']);
+Route::get('/',[PagesController::class,'index']);
 
 Route::resource('/blog',PostsController::class);
 
